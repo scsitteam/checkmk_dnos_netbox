@@ -1,4 +1,4 @@
-# Checkmk extension for ...
+# Checkmk extension for Switch Config Diff
 
 ![build](https://github.com/jiuka/checkmk_template/workflows/build/badge.svg)
 ![flake8](https://github.com/jiuka/checkmk_template/workflows/Lint/badge.svg)
@@ -6,7 +6,7 @@
 
 ## Description
 
-This is a template to develop Checkmk Extensions
+Checkmk Extension to compare the Dell Switch running config and the Netbox rendered config.
 
 ## Development
 
