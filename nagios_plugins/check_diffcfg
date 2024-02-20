@@ -53,14 +53,13 @@ class CheckDiffCFG(object):
     @cached_property
     def git_config(self):
         headers={ 'accept': 'application/json', 
-                  'Authorization': f'token {self.args.netbox_token}' }
+                  'Authorization': f'token {self.args.server_token}' }
         cfg = requests.get(self.args.server, headers=headers).text
         return self.exclude_lines(cfg)
 
     @cached_property
     def session(self):
         s = requests.Session()
-        s.verify = False
         s.headers.update({'Authorization': f'Token {self.args.netbox_token}'})
         return s
 
