@@ -1,15 +1,15 @@
 {
     'author': u'IT Team - Supercomputing Systems AG',
-    'description': u'Dell Networking OS Switch Config Diff Checks',
+    'description': u'Switch Config Diff Checks',
     'download_url': 'https://github.com/scsitteam/checkmk_dnos_netbox',
     'files': {
-        'checks': ['check_dnos_diffcfg'],
-        'web': ['plugins/wato/check_dnos_diffcfg.py'],
-        'lib': ['nagios/plugins/check_dnos_diffcfg']
+        'checks': ['check_dnos_diffcfg', 'check_diffcfg'],
+        'web': ['plugins/wato/check_dnos_diffcfg.py', 'plugins/wato/check_diffcfg.py'],
+        'lib': ['nagios/plugins/check_dnos_diffcfg', 'nagios/plugins/check_diffcfg']
     },
     'name': 'diffcfg',
-    'title': u'Dell Networking OS Switch Config Diff Checks',
-    'version': '0.1.0',
+    'title': u'Switch Config Diff Checks',
+    'version': '0.1.1',
     'version.min_required': '2.1.0',
     'version.packaged': '2.2.0',
     'version.usable_until': '2.3.0',
