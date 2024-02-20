@@ -25,7 +25,6 @@ from cmk.gui.valuespec import (
 )
 from cmk.gui.plugins.wato import (
     rulespec_registry,
-    IndividualOrStoredPassword,
     HostRulespec,
 )
 try:
@@ -34,29 +33,15 @@ except Exception:
     from cmk.gui.plugins.wato.active_checks.common import RulespecGroupActiveChecks
 
 
-def _valuespec_active_checks_dellos10_diffcfg():
+def _valuespec_active_checks_diffcfg():
     return Dictionary(
-        title = "Check diff of running and rendered config",
-        help = "Check if rendered config of a Switch differs from the running config.",
+        title = "Check diff of commited and rendered config",
+        help = "Check if rendered config of a Switch differs from the commited config.",
         elements = [
             (
                 'host',
                 TextAscii(
                     title = _("Host"),
-                    allow_empty = False
-                ),
-            ),
-            (
-                'user',
-                TextAscii(
-                    title = _("Username"),
-                    allow_empty = False
-                ),
-            ),
-            (
-                'password',
-                IndividualOrStoredPassword(
-                    title = _("Password"),
                     allow_empty = False
                 ),
             ),
@@ -106,7 +91,7 @@ def _valuespec_active_checks_dellos10_diffcfg():
                 ),
             ),
         ],
-        required_keys=['user', 'password', 'netbox', 'netbox-token', 'server', 'server-token'],
+        required_keys=['netbox', 'netbox-token', 'server', 'server-token'],
     )
 
 
@@ -114,6 +99,6 @@ rulespec_registry.register(
     HostRulespec(
         group=RulespecGroupActiveChecks,
         match_type='all',
-        name='active_checks:dellos10_diffcfg',
-        valuespec=_valuespec_active_checks_dellos10_diffcfg,
+        name='active_checks:diffcfg',
+        valuespec=_valuespec_active_checks_diffcfg,
     ))

@@ -16,15 +16,14 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-from cmk.base.check_api import passwordstore_get_cmdline
 from cmk.base.config import active_check_info
 
 
-def check_dellos10_diffcfg_desc(params):
+def check_diffcfg_desc(params):
     return "Config Diff"
 
 
-def check_dellos10_diffcfg_arguments(params):
+def check_diffcfg_arguments(params):
     args = []
 
     if "host" in params:
@@ -32,8 +31,6 @@ def check_dellos10_diffcfg_arguments(params):
     else:
         args += ["--host=$HOSTNAME$"]
 
-    args.append("--user=%s" % params["user"])
-    args.append(passwordstore_get_cmdline("--password=%s", params["password"]))
     args.append("--netbox=%s" % params["netbox"])
     args.append("--netbox-token=%s" % params["netbox-token"])
     args.append("--server=%s" % params["server"])
@@ -45,8 +42,8 @@ def check_dellos10_diffcfg_arguments(params):
     return args
 
 
-active_check_info['dellos10_diffcfg'] = {
-    "command_line": '$USER2$/check_dellos10_diffcfg $ARG1$',
-    "argument_function": check_dellos10_diffcfg_arguments,
-    "service_description": check_dellos10_diffcfg_desc,
+active_check_info['diffcfg'] = {
+    "command_line": '$USER2$/check_diffcfg $ARG1$',
+    "argument_function": check_diffcfg_arguments,
+    "service_description": check_diffcfg_desc,
 }

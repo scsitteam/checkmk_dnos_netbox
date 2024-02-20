@@ -22,12 +22,8 @@ import argparse
 import requests
 from functools import cached_property
 
-import cmk.utils.password_store
 
-cmk.utils.password_store.replace_passwords()
-
-
-class CheckDELLOS10DiffCFG(object):
+class CheckDiffCFG(object):
     def __init__(self):
         self.parse_arguments()
 
@@ -46,8 +42,6 @@ class CheckDELLOS10DiffCFG(object):
     def parse_arguments(self):
         parser = argparse.ArgumentParser()
         parser.add_argument("-H", "--host", required=True, help="Hostname for login")
-        parser.add_argument("-u", "--user", required=True, help="Username for login")
-        parser.add_argument("-p", "--password", default=None, help="Password for login")
         parser.add_argument("-n", "--netbox", required=True, help="FQDN of Netbox Config Server")
         parser.add_argument("-s", "--server", required=True, help="URL of Config File")
         parser.add_argument("--netbox-token", required=True, help="API Access Token for Netbox Config Server login")
@@ -60,7 +54,7 @@ class CheckDELLOS10DiffCFG(object):
     def git_config(self):
         headers={ 'accept': 'application/json', 
                   'Authorization': f'token {self.args.netbox_token}' }
-        cfg = requests.get(self.args.server, headers=headers, verify=False).text
+        cfg = requests.get(self.args.server, headers=headers).text
         return self.exclude_lines(cfg)
 
     @cached_property
@@ -99,5 +93,5 @@ class CheckDELLOS10DiffCFG(object):
 
 
 if __name__ == "__main__":
-    check = CheckDELLOS10DiffCFG()
+    check = CheckDiffCFG()
     exit(check.check())
