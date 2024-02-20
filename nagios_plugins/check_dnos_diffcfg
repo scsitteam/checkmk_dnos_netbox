@@ -66,7 +66,6 @@ class CheckDNOSDiffCFG(object):
     @cached_property
     def session(self):
         s = requests.Session()
-        s.verify = False
         s.headers.update({'Authorization': f'Token {self.args.token}'})
         return s
 

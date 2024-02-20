@@ -30,10 +30,10 @@ class CheckDiffCFG(object):
     def check(self):
         try:
             if self.git_config.splitlines() == self.render_config.splitlines():
-                print("OK: running and render config match")
+                print("OK: commit and render config match")
                 return 0
             else:
-                print("WARNING: running config differs from render config")
+                print("WARNING: commit config differs from render config")
                 return 1
         except Exception as e:
             print(f"UNKNOWN: {e}")
