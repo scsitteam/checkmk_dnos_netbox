@@ -1,0 +1,49 @@
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+#
+# Copyright (C) 2024  Lamberto Grippi <lamberto.grippi@scs.ch>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+from cmk.base.config import active_check_info
+
+
+def check_diffcfg_desc(params):
+    return "Config Diff"
+
+
+def check_diffcfg_arguments(params):
+    args = []
+
+    if "host" in params:
+        args += ["--host=%s" % params["host"]]
+    else:
+        args += ["--host=$HOSTNAME$"]
+
+    args.append("--netbox=%s" % params["netbox"])
+    args.append("--netbox-token=%s" % params["netbox-token"])
+    args.append("--server=%s" % params["server"])
+    args.append("--server-token=%s" % params["server-token"])
+
+    for item in params["ignore"]:
+        args += ["--ignore=%s" % item]
+
+    return args
+
+
+active_check_info['diffcfg'] = {
+    "command_line": '$USER2$/check_diffcfg $ARG1$',
+    "argument_function": check_diffcfg_arguments,
+    "service_description": check_diffcfg_desc,
+}

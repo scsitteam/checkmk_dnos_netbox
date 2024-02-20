@@ -6,7 +6,7 @@
 
 ## Description
 
-Checkmk Extension to compare the Dell Switch running config and the Netbox rendered config.
+Checkmk Extension to compare the Netbox rendered config against the Dell OS6 Switch running config or comitted config on HTTP Server.
 
 ## Development
 
