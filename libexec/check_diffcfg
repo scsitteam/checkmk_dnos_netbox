@@ -18,6 +18,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import re
+import difflib
 import argparse
 import requests
 from functools import cached_property
@@ -34,6 +35,8 @@ class CheckDiffCFG(object):
                 return 0
             else:
                 print("WARNING: commit config differs from render config")
+                for line in difflib.unified_diff(self.render_config.splitlines(), self.git_config.splitlines(), fromfile='nextbox', tofile='backup-config'):
+                    print(line.rstrip())
                 return 1
         except Exception as e:
             print(f"UNKNOWN: {e}")
@@ -52,8 +55,10 @@ class CheckDiffCFG(object):
 
     @cached_property
     def git_config(self):
-        headers={ 'accept': 'application/json', 
-                  'Authorization': f'token {self.args.server_token}' }
+        headers = {
+            'accept': 'application/json',
+            'Authorization': f'token {self.args.server_token}'
+        }
         cfg = requests.get(self.args.server, headers=headers).text
         return self.exclude_lines(cfg)
 
@@ -66,7 +71,7 @@ class CheckDiffCFG(object):
     @cached_property
     def render_config(self):
         device = self.args.host
-        apiurl = f"https://{self.args.netbox}/api/dcim"
+        apiurl = f"{self.args.netbox}/api/dcim"
 
         vc = self.session.get(f"{apiurl}/virtual-chassis/", params=dict(name=device)).json()
 

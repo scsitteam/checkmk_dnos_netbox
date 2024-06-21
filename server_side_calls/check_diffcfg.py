@@ -49,9 +49,9 @@ def commands_function(
         command_arguments += ['--host', replace_macros('$HOSTNAME$', host_config.macros)]
 
     command_arguments += ['--netbox', params.netbox]
-    command_arguments += ['--netbox-token', params.netbox_token]
-    command_arguments += ['--server', params.server]
-    command_arguments += ['--server-token', params.server_token]
+    command_arguments += ['--netbox-token', params.netbox_token.unsafe()]
+    command_arguments += ['--server', replace_macros(params.server, host_config.macros)]
+    command_arguments += ['--server-token', params.server_token.unsafe()]
 
     for item in params.ignore:
         command_arguments += ['--ignore', item]

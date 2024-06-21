@@ -59,7 +59,9 @@ def _form_active_checks_diffcfg():
             'netbox': DictElement(
                 parameter_form=String(
                     title=Title('Netbox-Server'),
-                    custom_validate=(validators.LengthInRange(min_value=1),),
+                    custom_validate=(
+                        validators.Url([validators.UrlProtocol.HTTP, validators.UrlProtocol.HTTPS]),
+                    ),
                 ),
                 required=True,
             ),

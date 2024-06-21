@@ -1,8 +1,7 @@
 # Checkmk extension for Switch Config Diff
 
-![build](https://github.com/jiuka/checkmk_template/workflows/build/badge.svg)
-![flake8](https://github.com/jiuka/checkmk_template/workflows/Lint/badge.svg)
-![pytest](https://github.com/jiuka/checkmk_template/workflows/pytest/badge.svg)
+![build](https://github.com/scsitteam/checkmk_dnos_netbox/workflows/build/badge.svg)
+![flake8](https://github.com/jiuka/scsitteam/checkmk_dnos_netbox/Lint/badge.svg)
 
 ## Description
 

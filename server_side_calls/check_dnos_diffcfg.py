@@ -49,9 +49,9 @@ def commands_function(
         command_arguments += ['--host', replace_macros('$HOSTNAME$', host_config.macros)]
 
     command_arguments += ['--user', params.user]
-    command_arguments += ['--password', params.password]
-    command_arguments += ['--server', params.server]
-    command_arguments += ['--token', params.token]
+    command_arguments += ['--password', params.password.unsafe()]
+    command_arguments += ['--server', replace_macros(params.server, host_config.macros)]
+    command_arguments += ['--token', params.token.unsafe()]
 
     for item in params.ignore:
         command_arguments += ['--ignore', item]
