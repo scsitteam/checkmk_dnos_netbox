@@ -35,15 +35,12 @@ class CheckDNOSDiffCFG(object):
 
     def check(self):
         try:
-            self.ssh_read()
-            self.ssh_cmd("en")
-            self.ssh_cmd("terminal length 0")
-            if self.running_config.splitlines() == self.render_config.splitlines():
+            if self.running_config == self.render_config:
                 print("OK: running and render config match")
                 return 0
             else:
                 print("WARNING: running config differs from render config")
-                for line in difflib.unified_diff(self.render_config.splitlines(), self.running_config.splitlines(), fromfile='nextbox', tofile='running-config'):
+                for line in difflib.unified_diff(self.render_config, self.running_config, fromfile='nextbox', tofile='running-config'):
                     print(line.rstrip())
                 return 1
         except Exception as e:
@@ -52,23 +49,36 @@ class CheckDNOSDiffCFG(object):
 
     def parse_arguments(self):
         parser = argparse.ArgumentParser()
-        parser.add_argument("-H", "--host", required=True, help="Hostname for DNOS login")
-        parser.add_argument("-u", "--user", required=True, help="Username for DNOS login")
-        parser.add_argument("-p", "--password", default=None, help="Password for DNOS login")
-        parser.add_argument("-s", "--server", required=True, help="FQDN of Network Config Server")
-        parser.add_argument("-t", "--token", required=True, help="API Access Token for Server login")
+
+        group = parser.add_argument_group('DNOS SSH Access')
+        group.add_argument("-H", "--host", required=True, help="Hostname for DNOS login")
+        group.add_argument("-u", "--user", required=True, help="Username for DNOS login")
+        group.add_argument("-p", "--password", default=None, help="Password for DNOS login")
+
+        group = parser.add_argument_group('Netbox Config Server')
+        group.add_argument("-s", "--server", required=True, help="FQDN of Network Config Server")
+        group.add_argument("-t", "--token", required=True, help="API Access Token for Server login")
+        group.add_argument('--ignore-cert', dest='verify_cert', action='store_false', help='Do not verify the SSL cert from Network Config Server.')
+
         parser.add_argument("-i", "--ignore", required=False, nargs="*", action='extend', type=str, default=[], help="Regular expression to ignore Lines")
+        parser.add_argument("-r", "--replace", required=False, nargs="*", action='extend', type=str, default=[], help="Regular expression to replace. /PATTERN/REPLACE/")
         parser.add_argument("-d", "--debug", action="store_true", default=False)
         self.args = parser.parse_args()
 
     @cached_property
     def running_config(self):
+        self.ssh_read()
+        self.ssh_cmd("en")
+        self.ssh_cmd("terminal length 0")
         runningcfg = self.ssh_cmd("show running-config")
-        return self.exclude_lines(runningcfg)
+        runningcfg = self.exclude_lines(runningcfg)
+        runningcfg = self.replace_lines(runningcfg)
+        return runningcfg.splitlines()
 
     @cached_property
     def session(self):
         s = requests.Session()
+        s.verify = False
         s.headers.update({'Authorization': f'Token {self.args.token}'})
         return s
 
@@ -77,27 +87,41 @@ class CheckDNOSDiffCFG(object):
         device = self.args.host
         apiurl = f"{self.args.server}/api/dcim"
 
-        vc = self.session.get(f"{apiurl}/virtual-chassis/", params=dict(name=device)).json()
+        vc = self.session.get(f"{apiurl}/virtual-chassis/", params=dict(name=device), verify=self.args.verify_cert).json()
 
         if vc['results']:
             deviceid = vc['results'][0]['master']['id']
         else:
-            dev = self.session.get(f"{apiurl}/devices/", params=dict(name=device)).json()
+            dev = self.session.get(f"{apiurl}/devices/", params=dict(name=device), verify=self.args.verify_cert).json()
             deviceid = dev['results'][0]['id']
 
-        rendercfg = (self.session.post(f"{apiurl}/devices/{deviceid}/render-config/?format=json")).json()['content']
+        rendercfg = self.session.post(f"{apiurl}/devices/{deviceid}/render-config/?format=json", verify=self.args.verify_cert).json()['content']
 
-        return self.exclude_lines(rendercfg)
+        rendercfg = self.exclude_lines(rendercfg)
+        rendercfg = self.replace_lines(rendercfg)
+        return rendercfg.splitlines()
 
     def exclude_lines(self, text):
         for item in self.args.ignore:
-            text = (re.sub(item, '', text, flags=re.I | re.M))
+            text = re.sub(item, '', text, flags=re.I | re.M)
 
         if self.args.debug:
             print("---------------------------------------------------------------------------")
             print(f"{text.strip()}")
 
         return text.strip()
+
+    def replace_lines(self, text):
+        regext_parser = re.compile(r'^\/(.*)(?<!\\)\/(.*)\/$')
+        for item in self.args.replace:
+            mo = regext_parser.match(item)
+            if not mo:
+                print(f"Error parsing replace regex '{item}'")
+                continue
+            pattern, replace = mo.groups()
+            while re.search(pattern, text):
+                text = re.sub(pattern, replace, text, flags=re.MULTILINE | re.IGNORECASE)
+        return text
 
     @cached_property
     def ssh(self):

@@ -30,12 +30,12 @@ class CheckDiffCFG(object):
 
     def check(self):
         try:
-            if self.git_config.splitlines() == self.render_config.splitlines():
+            if self.git_config == self.render_config:
                 print("OK: commit and render config match")
                 return 0
             else:
                 print("WARNING: commit config differs from render config")
-                for line in difflib.unified_diff(self.render_config.splitlines(), self.git_config.splitlines(), fromfile='nextbox', tofile='backup-config'):
+                for line in difflib.unified_diff(self.render_config, self.git_config, fromfile='nextbox', tofile='backup-config'):
                     print(line.rstrip())
                 return 1
         except Exception as e:
@@ -49,7 +49,9 @@ class CheckDiffCFG(object):
         parser.add_argument("-s", "--server", required=True, help="URL of Config File")
         parser.add_argument("--netbox-token", required=True, help="API Access Token for Netbox Config Server login")
         parser.add_argument("--server-token", required=False, help="API Access Token for HTTP Server login")
+        parser.add_argument('--ignore-cert', dest='verify_cert', action='store_false', help='Do not verify the SSL cert from Network Config Server.')
         parser.add_argument("-i", "--ignore", required=False, nargs="*", action='extend', type=str, default=[], help="Regular expression to ignore Lines")
+        parser.add_argument("-r", "--replace", required=False, nargs="*", action='extend', type=str, default=[], help="Regular expression to replace. /PATTERN/REPLACE/")
         parser.add_argument("-d", "--debug", action="store_true", default=False)
         self.args = parser.parse_args()
 
@@ -59,8 +61,10 @@ class CheckDiffCFG(object):
             'accept': 'application/json',
             'Authorization': f'token {self.args.server_token}'
         }
-        cfg = requests.get(self.args.server, headers=headers).text
-        return self.exclude_lines(cfg)
+        cfg = requests.get(self.args.server, headers=headers, verify=self.args.verify_cert).text
+        cfg = self.exclude_lines(cfg)
+        cfg = self.replace_lines(cfg)
+        return cfg.splitlines()
 
     @cached_property
     def session(self):
@@ -73,17 +77,19 @@ class CheckDiffCFG(object):
         device = self.args.host
         apiurl = f"{self.args.netbox}/api/dcim"
 
-        vc = self.session.get(f"{apiurl}/virtual-chassis/", params=dict(name=device)).json()
+        vc = self.session.get(f"{apiurl}/virtual-chassis/", params=dict(name=device), verify=self.args.verify_cert).json()
 
         if vc['results']:
             deviceid = vc['results'][0]['master']['id']
         else:
-            dev = self.session.get(f"{apiurl}/devices/", params=dict(name=device)).json()
+            dev = self.session.get(f"{apiurl}/devices/", params=dict(name=device), verify=self.args.verify_cert).json()
             deviceid = dev['results'][0]['id']
 
-        rendercfg = (self.session.post(f"{apiurl}/devices/{deviceid}/render-config/?format=json")).json()['content']
+        rendercfg = self.session.post(f"{apiurl}/devices/{deviceid}/render-config/?format=json", verify=self.args.verify_cert).json()['content']
 
-        return self.exclude_lines(rendercfg)
+        rendercfg = self.exclude_lines(rendercfg)
+        rendercfg = self.replace_lines(rendercfg)
+        return rendercfg.splitlines()
 
     def exclude_lines(self, text):
         for item in self.args.ignore:
@@ -94,6 +100,18 @@ class CheckDiffCFG(object):
             print(f"{text.strip()}")
 
         return text.strip()
+
+    def replace_lines(self, text):
+        regext_parser = re.compile(r'^\/(.*)(?<!\\)\/(.*)\/$')
+        for item in self.args.replace:
+            mo = regext_parser.match(item)
+            if not mo:
+                print(f"Error parsing replace regex '{item}'")
+                continue
+            pattern, replace = mo.groups()
+            while re.search(pattern, text):
+                text = re.sub(pattern, replace, text, flags=re.MULTILINE | re.IGNORECASE)
+        return text
 
 
 if __name__ == "__main__":

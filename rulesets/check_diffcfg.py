@@ -21,6 +21,7 @@ from cmk.rulesets.v1 import Help, Title
 from cmk.rulesets.v1.form_specs import (
     DictElement,
     Dictionary,
+    InputHint,
     List,
     MatchingScope,
     migrate_to_password,
@@ -97,6 +98,14 @@ def _form_active_checks_diffcfg():
                         ' This allows to ignore lines which can never be found in both configs.'
                     ),
                     element_template=RegularExpression(predefined_help_text=MatchingScope.INFIX),
+                ),
+                required=False,
+            ),
+            'replace': DictElement(
+                parameter_form=List(
+                    title=Title('Replace patterns'),
+                    help_text=Help('You can optionally define one or multiple regular expressions to replace.'),
+                    element_template=RegularExpression(predefined_help_text=MatchingScope.INFIX, prefill=InputHint("/PATTERN/REPLACE/")),
                 ),
                 required=False,
             ),
