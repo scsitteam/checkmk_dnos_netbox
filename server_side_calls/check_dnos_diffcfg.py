@@ -35,6 +35,7 @@ class Params(BaseModel, frozen=True):
     server: str
     token: Secret
     ignore: list[str] | None
+    replace: list[str] | None = None
 
 
 def commands_function(
@@ -53,8 +54,12 @@ def commands_function(
     command_arguments += ['--server', replace_macros(params.server, host_config.macros)]
     command_arguments += ['--token', params.token.unsafe()]
 
-    for item in params.ignore:
-        command_arguments += ['--ignore', item]
+    if params.ignore:
+        for item in params.ignore:
+            command_arguments += ['--ignore', item]
+    if params.replace:
+        for item in params.replace:
+            command_arguments += ['--replace', item]
 
     yield ActiveCheckCommand(
         service_description='Config Diff',
